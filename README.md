@@ -6,4 +6,8 @@ Hamura, Y., Ieir, K and Sugasawa, S. (2022). On Data Augmentation for Models Inv
 
 The repository includes the following files.
 
- - 
+ - Sampler_t_dist.R : Implementation of MCMC algorithms for fitting t-distribution 
+ - Sampler_ DirMult.R : Implementation of MCMC algorithms for fitting Dirichlet-multinomial distribution 
+ - Example_t_dist.R : One-shot simulation study with t-distribution 
+ - Example_DirMult.R : One-shot simulation study with Dirichlet-multinomial distribution 
+
