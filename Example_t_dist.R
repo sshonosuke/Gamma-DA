@@ -14,7 +14,7 @@ source("Sampler_t_dist.R")
 
 ## simulation settings 
 n <- 50     # sample size
-true_alpha <- 1   # true degrees of freedom parameter
+true_alpha <- 1/2   # true alpha (2*alpha is the degrees of freedom)
 true_theta <- 3    # true location parameter
 true_tau <- 1   # true scale parameter
 

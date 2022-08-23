@@ -14,13 +14,13 @@ library(zipfR)
 ## INPUT 
 # x: data (vector) 
 # prior_theta: mean and standard deviation of normal prior for 'theta' 
-# prior_tau: shape and rate of inverse-gamma prior for 'tau^2' 
+# prior_tau: shape and rate of inverse-gamma prior for 'tau' 
 # prior_alpha: shape and rate of gamma prior for 'alpha' 
 # alpha_min: lower bound of alpha (optional)
 # mc: MCMC length 
 # burn: length of burn-in period 
 ## OUTPUT
-# matrix of posterior samples of ('theta', 'tau^2', 'alpha')
+# matrix of posterior samples of ('theta', 'tau', 'alpha')
 
 DA_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1), 
                        prior_alpha=c(0.1, 0.1), alpha_min=NULL, mc=5000, burn=1000){
@@ -39,18 +39,22 @@ DA_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
   }
   
   ## initial values 
-  al <- 1
+  if(is.null(alpha_min)){ 
+    al <- 1 
+  }else{
+    al <- alpha_min + 1 
+  }
   w <- rep(1, n)
   th <- ta <- NA
   rho <- rep(NA, n - 1)
   
   ## matrices to store posterior samples
   Pos_sample <- matrix(NA, mc, 3)
-  dimnames(Pos_sample)[[2]] <- c("theta", "tau2", "alpha")
+  dimnames(Pos_sample)[[2]] <- c("theta", "tau", "alpha")
   
   ## MCMC iterations
   for(r in 1:mc){
-    # tau^2 (scale) 
+    # tau (scale) 
     tau_shape <- n/2 + c
     tau_rate <- 0.5*(a^2*b^2 + sum(w*x^2) - (a^2*b + sum(w*x))^2/(a^2 + sum(w))) + d
     ta <- 1 / rgamma(1, shape=tau_shape, rate=tau_rate)
@@ -74,7 +78,8 @@ DA_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
     if(is.null(alpha_min)){
       al_proposal <- rgamma(1, shape=alpha_shape, rate=alpha_rate)   # proposal
     }else{
-      al_proposal <- rtrunc(1, spec="gamma", a=alpha_min, b=Inf, shape=alpha_shape, rate=alpha_rate)  # proposal
+      al_proposal <- al
+      try( al_proposal <- rtrunc(1, spec="gamma", a=alpha_min, b=Inf, shape=alpha_shape, rate=alpha_rate)  )  # proposal
     }
     log_uniform <- log(runif(1))
     if(log_uniform <= (-1)/(12*n*al_proposal)){   # MH step 
@@ -107,7 +112,7 @@ DA_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
 ## INPUT 
 # x: data (vector) 
 # prior_theta: mean and precision of normal prior for 'theta' 
-# prior_tau: shape and rate of inverse-gamma prior for 'tau^2' 
+# prior_tau: shape and rate of inverse-gamma prior for 'tau' 
 # prior_alpha: shape and rate of gamma prior for 'alpha' 
 # alpha_min: lower bound of alpha (optional)
 # ep: tolerance 
@@ -115,7 +120,7 @@ DA_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
 # mc: MCMC length 
 # burn: length of burn-in period 
 ## OUTPUT
-# matrix of posterior samples of ('theta', 'tau^2', 'alpha')
+# matrix of posterior samples of ('theta', 'tau', 'alpha')
 
 AMH_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1), 
                        prior_alpha=c(0.1, 0.1), alpha_min=NULL, ep=10^(-8), M=10, mc=5000, burn=1000){
@@ -170,17 +175,21 @@ AMH_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
   }
   
   ## initial values 
-  al <- 1
+  if(is.null(alpha_min)){ 
+    al <- 1 
+  }else{
+    al <- alpha_min + 1 
+  }
   w <- rep(1, n)
   th <- ta <- NA
   
   ## matrices to store posterior samples
   Pos_sample <- matrix(NA, mc, 3)
-  dimnames(Pos_sample)[[2]] <- c("theta", "tau2", "alpha")
+  dimnames(Pos_sample)[[2]] <- c("theta", "tau", "alpha")
   
   ## MCMC iterations
   for(r in 1:mc){
-    # tau^2 (scale) 
+    # tau (scale) 
     tau_shape <- n/2 + c
     tau_rate <- 0.5*(a^2*b^2 + sum(w*x^2) - (a^2*b + sum(w*x))^2/(a^2 + sum(w))) + d
     ta <- 1 / rgamma(1, shape=tau_shape, rate=tau_rate)
@@ -202,7 +211,8 @@ AMH_sampler <- function(x, prior_theta=c(0, sqrt(0.1)), prior_tau=c(0.1, 0.1),
     if(is.null(alpha_min)){
       al_proposal <- rgamma(1, shape=A, rate=B)   # proposal 
     }else{
-      al_proposal <- rtrunc(1, spec="gamma", a=alpha_min, b=Inf, shape=A, rate=B)
+      al_proposal <- al
+      try( al_proposal <- rtrunc(1, spec="gamma", a=alpha_min, b=Inf, shape=A, rate=B) )
     }
     log_uniform <- log(runif(1))
     log_ratio <- (a0 - A)*(log(al_proposal) - log(al)) - (al_proposal - al)*(b0 - B) + n*( al_proposal*log(al_proposal) - lgamma(al_proposal) - al*log(al) + lgamma(al) ) + (al_proposal - al)*sum(log(w) - w)
