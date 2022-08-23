@@ -10,4 +10,4 @@ The repository includes the following files.
  - Sampler_ DirMult.R : Implementation of MCMC algorithms for fitting Dirichlet-multinomial distribution 
  - Example_t_dist.R : One-shot simulation study with t-distribution 
  - Example_DirMult.R : One-shot simulation study with Dirichlet-multinomial distribution 
-
+ - Replication.zip: Files to replicate tables and figures in the above paper.  
